@@ -1,671 +1,1333 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>oz3R</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Custom styles that might not be covered purely by Tailwind utility classes if needed */
-        body {
-            background-color: #0a0a0a;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-        }
-        ::selection {
-            background-color: rgba(59, 130, 246, 0.3);
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>oz3R</title>
+  <meta name="description" content="oz3R">
+  <meta name="theme-color" content="#0b0c0f">
+  <link rel="icon" href="avatar.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Rajdhani:wght@600;700&family=Anton&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --panel: #121419;
+      --panel-2: #181b21;
+      --line: rgba(255,255,255,.07);
+      --line-2: rgba(255,255,255,.12);
+      --text: #e8eaee;
+      --muted: #8d939e;
+      --dim: #5d636d;
+      --accent: #ff9f1c;
+      --accent-soft: rgba(255,159,28,.12);
+      --accent-line: rgba(255,159,28,.35);
+      --radius: 14px;
+      --display: 'Rajdhani', 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before { /* subtle tactical grid */
+      content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+      opacity: .6;
+    }
+    ::selection { background: var(--accent); color: #000; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    svg.lucide { width: 1em; height: 1em; stroke-width: 2; flex-shrink: 0; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-        /* CS2 Font (Inter is close enough for web, or use a custom font if available) */
-        .font-cs2 {
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.05em;
-        }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 768px) { .wrap { padding: 0 28px; } }
 
-        @keyframes slide-up {
-            from {
-                transform: translateY(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        .animate-slide-up {
-            animation: slide-up 1s ease-out forwards;
-        }
+    /* ---------- Nav ---------- */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(11,12,15,.78);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-in { display: flex; align-items: center; justify-content: center; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font: 700 22px var(--display); letter-spacing: .02em; }
+    .brand-mark {
+      width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
+      background: var(--accent); color: #111;
+    }
+    .brand-mark svg { width: 18px; height: 18px; stroke-width: 2.5; }
+    /* Centered menu; if it ever gets wider than the screen it scrolls sideways instead of overflowing */
+    .links {
+      display: flex; gap: 4px; max-width: 100%; overflow-x: auto; scrollbar-width: none;
+      padding: 4px; border-radius: 12px; background: rgba(255,255,255,.025); border: 1px solid var(--line);
+    }
+    .links > :first-child { margin-left: auto; }
+    .links > :last-child { margin-right: auto; }
+    .links::-webkit-scrollbar { display: none; }
+    .links a {
+      display: flex; align-items: center; gap: 7px; white-space: nowrap; flex-shrink: 0;
+      padding: 9px 14px; border-radius: 9px;
+      font: 600 13px/1 'Inter'; letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+      transition: color .2s, background .2s;
+    }
+    .links a.faceit:hover { color: #ff5500; }
+    @media (max-width: 600px) {
+      .nav-in { height: 58px; }
+      .links a { padding: 9px 11px; font-size: 12px; gap: 6px; }
+    }
+    @media (max-width: 420px) {
+      .links { gap: 2px; }
+      .links a { padding: 9px 9px; }
+      .links a.faceit span { display: none; } /* FACEIT logo only on small phones */
+      .links .sep { margin: 6px 2px; }
+      .stat { padding: 14px; min-width: 0; }
+      .stat b { font-size: 24px; }
+      .stat b small { display: block; margin: 4px 0 0; font-size: 13px; }
+    }
+    @media (max-width: 380px) {
+      .links a { padding: 8px 9px; font-size: 11px; }
+      .links a svg, .links a .glogo { display: none; } /* text only on very small phones so every tab fits */
+    }
+    .links a:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .links a.active { color: var(--accent); background: var(--accent-soft); }
+    .links .sep { width: 1px; background: var(--line-2); margin: 6px 6px; flex-shrink: 0; }
+    .links .glogo { width: 16px; height: 16px; opacity: .55; transition: opacity .2s; }
+    .links a:hover .glogo, .links a.active .glogo { opacity: 1; }
+    .hero[hidden] { display: none; }
 
-        /* Loading Bar Animation */
-        @keyframes loading-bar {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-        .animate-loading-bar {
-            animation: loading-bar 2.5s ease-in-out forwards;
-        }
+    /* Game panels */
+    .game[hidden] { display: none; }
+    .game { display: flex; flex-direction: column; gap: 72px; }
+    @media (min-width: 768px) { .game { gap: 104px; } }
+    .game-head h2 { font: 700 clamp(40px, 8vw, 64px)/.95 var(--display); margin-top: 8px; }
+    .game-head .stats { margin-top: 24px; }
+    .soon {
+      display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 16px; border-radius: 10px;
+      background: var(--accent-soft); border: 1px dashed var(--accent-line); color: var(--accent); font-size: 14px; font-weight: 600;
+    }
+    .row dd.tbd, .stat b.tbd, .tile b.tbd { color: var(--dim); }
 
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neutral: {
-                            950: '#0a0a0a',
-                        },
-                        cs2yellow: '#EAB308', // Approximate CS2 yellow
-                        cs2orange: '#FF9900'  // For accents/loading bar if needed
-                    },
-                    animation: {
-                        'spin-slow': 'spin 3s linear infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Preload CS2 font if desired, here using Inter as a good substitute -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    /* ---------- Hero ---------- */
+    .hero { padding: 56px 0 24px; position: relative; }
+    .hero::after {
+      content: ""; position: absolute; top: -120px; left: 50%; width: min(900px, 100vw); height: 500px; transform: translateX(-50%);
+      background: radial-gradient(closest-side, rgba(255,159,28,.13), transparent);
+      pointer-events: none; z-index: -1;
+    }
+    .hero-grid { display: grid; gap: 28px; align-items: center; justify-items: center; text-align: center; }
+    @media (min-width: 768px) {
+      .hero { padding: 88px 0 32px; }
+      .hero-grid { grid-template-columns: auto 1fr; gap: 48px; justify-items: start; text-align: left; }
+    }
+    .avatar { position: relative; width: 148px; height: 148px; }
+    @media (min-width: 768px) { .avatar { width: 196px; height: 196px; } }
+    .avatar img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 22px;
+      border: 1px solid var(--line-2); background: var(--panel);
+    }
+    .avatar .corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--accent); }
+    .avatar .c1 { top: -9px; left: -9px; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+    .avatar .c2 { top: -9px; right: -9px; border-left: 0; border-bottom: 0; border-top-right-radius: 6px; }
+    .avatar .c3 { bottom: -9px; left: -9px; border-right: 0; border-top: 0; border-bottom-left-radius: 6px; }
+    .avatar .c4 { bottom: -9px; right: -9px; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+    .status {
+      position: absolute; bottom: 10px; right: 10px; display: flex; align-items: center; gap: 6px;
+      background: rgba(0,0,0,.75); padding: 4px 9px; border-radius: 99px; font: 700 10px var(--mono); letter-spacing: .1em;
+    }
+    .status i { width: 7px; height: 7px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 8px #3ddc84; }
+
+    .eyebrow { font: 700 12px var(--mono); letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+    .hero h1 {
+      font: 700 clamp(64px, 14vw, 120px)/.85 var(--display); letter-spacing: -.01em; margin: 10px 0 18px;
+      text-transform: none;
+    }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    @media (min-width: 768px) { .tags { justify-content: flex-start; } }
+    .tag {
+      display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px;
+      background: var(--panel-2); border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: #c9ccd3;
+    }
+    .tag svg { color: var(--dim); }
+    .tag.hl { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+    .tag.hl svg { color: var(--accent); }
+    a.tag:hover { border-color: var(--accent-line); color: var(--text); }
+
+    .stats {
+      margin-top: 40px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+      background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    }
+    @media (min-width: 768px) { .stats { grid-template-columns: repeat(4, 1fr); margin-top: 56px; } }
+    .stat { background: var(--panel); padding: 18px 20px; }
+    .stat span { display: block; font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+    .stat b { display: block; margin-top: 6px; font: 700 30px/1 var(--display); letter-spacing: .01em; }
+    .stat b small { font-size: 15px; color: var(--muted); margin-left: 4px; font-weight: 600; }
+
+    /* ---------- Sections ---------- */
+    main { display: flex; flex-direction: column; gap: 72px; }
+    main.wrap { padding-top: 48px; padding-bottom: 96px; }
+    @media (min-width: 768px) { main.wrap { padding-top: 64px; } }
+    @media (min-width: 768px) { main { gap: 104px; } }
+    .sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .sec-head h2 { font: 700 34px/1 var(--display); letter-spacing: .01em; margin-top: 8px; }
+    @media (min-width: 768px) { .sec-head h2 { font-size: 42px; } }
+    .sec-head .num { font: 700 12px var(--mono); color: var(--dim); letter-spacing: .1em; }
+
+    .grid { display: grid; gap: 16px; }
+    @media (min-width: 900px) {
+      .g-mouse { grid-template-columns: 3fr 2fr; }
+      .g-video { grid-template-columns: 1fr 2fr; }
+    }
+
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+    @media (min-width: 768px) { .card { padding: 28px; } }
+    .card-title {
+      display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
+      font: 700 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+    }
+    .card-title svg { color: var(--accent); font-size: 15px; }
+
+    dl.rows { display: grid; column-gap: 40px; }
+    @media (min-width: 640px) { dl.rows.c2 { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 900px) { dl.rows.c3 { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 640px) and (max-width: 899px) { dl.rows.c3 { grid-template-columns: 1fr 1fr; } }
+    .row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--line-2); }
+    .row dt { color: var(--muted); font-size: 14px; }
+    .row dd { font: 600 14px var(--mono); text-align: right; }
+    .row dd.on { color: var(--accent); }
+    .row dd .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+
+    /* Sensitivity hero card */
+    .sens { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; position: relative; overflow: hidden; }
+    .sens::before {
+      content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%;
+      border: 1px dashed var(--accent-line); opacity: .7;
+    }
+    .sens::after {
+      content: ""; position: absolute; right: -10px; top: -10px; width: 120px; height: 120px; border-radius: 50%;
+      border: 1px solid var(--accent-line); opacity: .5;
+    }
+    .big { font: 700 72px/.9 var(--display); color: var(--accent); }
+    .big-label { font: 600 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
+    .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+    .mini span { display: block; font: 600 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+    .mini b { font: 700 22px var(--display); }
+
+    /* Viewmodel tiles */
+    .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
+    @media (min-width: 640px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+    .tiles.t3 { grid-template-columns: repeat(3, 1fr); }
+    .preview.pubg-pv { height: 220px; background: radial-gradient(circle at 50% 50%, #8a857c, #5f5b54 70%, #47443f); }
+    @media (min-width: 768px) { .preview.pubg-pv { height: 280px; } }
+    .pubg-pv .xh svg { width: 140px; height: 140px; }
+    .tile { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-align: center; }
+    .tile span { display: block; font: 600 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+    .tile b { display: block; margin-top: 4px; font: 700 34px/1.1 var(--display); }
+
+    /* Code / copy */
+    .code {
+      margin-top: 14px; display: flex; align-items: center; gap: 12px;
+      background: #0d0f12; border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 16px;
+    }
+    .code code {
+      flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+      mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+      font: 500 13px var(--mono); color: var(--muted); padding: 6px 0;
+    }
+    .code code.hl { color: var(--accent); font-weight: 700; letter-spacing: .02em; }
+    .copy {
+      display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+      background: var(--accent); color: #111; font: 700 12px 'Inter'; letter-spacing: .06em; text-transform: uppercase;
+      padding: 10px 14px; border-radius: 9px; transition: transform .15s, filter .2s;
+    }
+    .copy:hover { filter: brightness(1.1); }
+    .copy:active { transform: scale(.96); }
+    .copy.done { background: #3ddc84; }
+
+    /* Crosshair preview */
+    .preview {
+      position: relative; height: 240px; border-radius: 12px; overflow: hidden; background: #000;
+      border: 1px solid var(--line); margin-bottom: 14px;
+    }
+    @media (min-width: 768px) { .preview { height: 340px; } }
+    .preview img.map { width: 100%; height: 100%; object-fit: cover; opacity: .8; transition: opacity .35s; }
+    .preview img.map.fade { opacity: 0; }
+    .xh { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+    .xh svg { width: 100px; height: 100px; transition: transform .3s ease; filter: drop-shadow(0 0 1px rgba(0,0,0,.8)); }
+    .preview.zoom .xh svg { transform: scale(3); }
+    .pv-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: 6px 10px;
+      font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #ddd;
+    }
+    button.chip:hover { border-color: var(--accent-line); color: var(--accent); }
+    .pv-nav {
+      position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%;
+      display: grid; place-items: center; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.1); font-size: 20px;
+      transition: background .2s, color .2s;
+    }
+    .pv-nav:hover { background: rgba(0,0,0,.85); color: var(--accent); }
+    .pv-prev { left: 12px; } .pv-next { right: 12px; }
+    .maps { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 18px; padding-bottom: 2px; }
+    .maps::-webkit-scrollbar { display: none; }
+    .maps button {
+      flex-shrink: 0; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--panel-2); font: 600 12px 'Inter'; color: var(--muted); transition: all .2s;
+    }
+    .maps button:hover { color: var(--text); border-color: var(--line-2); }
+    .maps button.active { color: #111; background: var(--accent); border-color: var(--accent); }
+
+    /* Item cards */
+    .items { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 560px) { .items { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 900px) { .items.i3 { grid-template-columns: repeat(3, 1fr); } .items.i4 { grid-template-columns: repeat(4, 1fr); } }
+    .item {
+      display: flex; gap: 14px; align-items: flex-start; padding: 18px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      transition: border-color .25s, transform .25s, background .25s;
+    }
+    .item:hover { border-color: var(--accent-line); transform: translateY(-2px); background: var(--panel-2); }
+    .item .ic {
+      width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0;
+      background: var(--accent-soft); color: var(--accent); font-size: 21px;
+    }
+    .item span { display: block; font: 600 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+    .item h3 { font-size: 15px; font-weight: 600; line-height: 1.35; }
+    .item h3 small { display: block; color: var(--muted); font-weight: 500; font-size: 13px; margin-top: 2px; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--line); padding: 36px 0; color: var(--dim); font-size: 13px; }
+    .foot { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+    .foot a:hover { color: var(--accent); }
+    .foot .brand { font-size: 18px; color: var(--text); }
+    .foot .brand-mark { width: 26px; height: 26px; }
+    .foot .brand-mark svg { width: 15px; height: 15px; }
+
+    /* Toast */
+    #toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 90;
+      background: #1c1f25; border: 1px solid var(--line-2); color: var(--text); border-radius: 10px;
+      padding: 11px 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;
+      opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    #toast svg { color: #3ddc84; }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* Reveal */
+    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+    .js .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* =====================================================================
+       GLASS THEME — translucent, blurred surfaces over an animated backdrop
+       ===================================================================== */
+    :root {
+      --glass: rgba(255,255,255,.045);
+      --glass-2: rgba(255,255,255,.07);
+      --glass-line: rgba(255,255,255,.10);
+      --glass-hi: rgba(255,255,255,.16);
+      --blur: blur(18px) saturate(150%);
+      --shadow: 0 24px 48px -24px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+      --ease: cubic-bezier(.22,1,.36,1);
+    }
+    body { background: #07080b; }
+    body::before { opacity: .35; z-index: -1; }
+
+    /* Animated backdrop */
+    .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; will-change: transform; }
+    .b1 { width: 46vw; height: 46vw; min-width: 320px; min-height: 320px; left: -10vw; top: -12vw;
+          background: radial-gradient(circle, #ff9f1c, transparent 65%); animation: drift1 26s var(--ease) infinite alternate; }
+    .b2 { width: 40vw; height: 40vw; min-width: 280px; min-height: 280px; right: -12vw; top: 10vh;
+          background: radial-gradient(circle, #ff5e3a, transparent 65%); opacity: .38; animation: drift2 32s var(--ease) infinite alternate; }
+    .b3 { width: 38vw; height: 38vw; min-width: 260px; min-height: 260px; left: 25vw; bottom: -18vw;
+          background: radial-gradient(circle, #5b6cff, transparent 65%); opacity: .28; animation: drift3 38s var(--ease) infinite alternate; }
+    .b4 { width: 26vw; height: 26vw; min-width: 200px; min-height: 200px; right: 8vw; bottom: 6vh;
+          background: radial-gradient(circle, #19d3c5, transparent 65%); opacity: .18; animation: drift1 30s var(--ease) infinite alternate-reverse; }
+    @keyframes drift1 { to { transform: translate(18vw, 14vh) scale(1.15); } }
+    @keyframes drift2 { to { transform: translate(-16vw, 22vh) scale(.9); } }
+    @keyframes drift3 { to { transform: translate(-12vw, -20vh) scale(1.2); } }
+    .noise {
+      position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Floating glass navigation pill */
+    nav { background: transparent; border-bottom: 0; backdrop-filter: none; -webkit-backdrop-filter: none; padding-top: 12px; }
+    .nav-in { height: auto; padding-bottom: 4px; }
+    /* Invisible barrier: content scrolling up dissolves (blur + fade) before reaching the menu */
+    nav::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: -28px; z-index: -1; pointer-events: none;
+      background: linear-gradient(180deg, rgba(7,8,11,.92) 0%, rgba(7,8,11,.8) 70%, rgba(7,8,11,0) 100%);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+    }
+    nav { padding-bottom: 10px; }
+    .links {
+      position: relative; padding: 5px; border-radius: 16px;
+      background: rgba(18,20,26,.55); border: 1px solid var(--glass-line);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.07);
+    }
+    .links a { position: relative; z-index: 1; border-radius: 11px; transition: color .3s var(--ease); }
+    .links a:hover { background: transparent; color: var(--text); }
+    .links a.active { background: transparent; color: #fff; }
+    .links .ind { /* sliding active indicator */
+      position: absolute; z-index: 0; top: 5px; bottom: 5px; left: 0; width: 0; border-radius: 11px;
+      background: linear-gradient(135deg, rgba(255,159,28,.95), rgba(255,94,58,.9));
+      box-shadow: 0 6px 22px -4px rgba(255,130,40,.65), inset 0 1px 0 rgba(255,255,255,.35);
+      transition: transform .45s var(--ease), width .45s var(--ease), opacity .3s;
+      opacity: 0;
+    }
+    .links a.active .glogo { opacity: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+    .links .sep { background: var(--glass-line); }
+
+    /* Glass surfaces */
+    .card, .item, .stats, .code, .preview {
+      background: var(--glass); border: 1px solid var(--glass-line);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      box-shadow: var(--shadow);
+    }
+    .card { border-radius: 20px; position: relative; overflow: hidden; }
+    .item { border-radius: 18px; position: relative; overflow: hidden; }
+    .preview { background: rgba(0,0,0,.35); border-radius: 16px; }
+    .preview.pubg-pv { background: radial-gradient(circle at 50% 50%, #8a857c, #5f5b54 70%, #47443f); }
+    .tile, .mini div, .maps button {
+      background: rgba(255,255,255,.035); border: 1px solid var(--glass-line); border-radius: 14px;
+      transition: transform .35s var(--ease), border-color .3s, background .3s;
+    }
+    .tile:hover, .mini div:hover { transform: translateY(-3px); border-color: var(--accent-line); background: rgba(255,159,28,.07); }
+    .stats { gap: 0; border-radius: 20px; }
+    .stat { background: transparent; position: relative; }
+    .stat + .stat::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 1px; background: var(--glass-line); }
+    @media (max-width: 767px) {
+      .stat:nth-child(3)::before { display: none; }
+      .stat:nth-child(n+3) { border-top: 1px solid var(--glass-line); }
+    }
+    .row { border-bottom: 1px solid rgba(255,255,255,.06); transition: background .25s; }
+    .row:hover dt { color: var(--text); }
+    .code { background: rgba(0,0,0,.28); border-radius: 14px; }
+
+    /* Cursor spotlight + glowing edge on hover (set by JS via --mx/--my) */
+    .card::after, .item::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(255,159,28,.13), transparent 45%);
+      transition: opacity .4s;
+    }
+    .card:hover::after, .item:hover::after { opacity: 1; }
+    .card, .item { transition: transform .45s var(--ease), border-color .35s, box-shadow .45s var(--ease); }
+    .item:hover, .card:hover { border-color: rgba(255,159,28,.28); }
+    .item:hover { transform: translateY(-4px); background: var(--glass-2); box-shadow: 0 30px 50px -24px rgba(0,0,0,.8), 0 0 0 1px rgba(255,159,28,.08), inset 0 1px 0 rgba(255,255,255,.08); }
+    .item .ic {
+      background: linear-gradient(135deg, rgba(255,159,28,.22), rgba(255,94,58,.12));
+      border: 1px solid rgba(255,159,28,.25); transition: transform .45s var(--ease);
+    }
+    .item:hover .ic { transform: rotate(-8deg) scale(1.08); }
+    .card-title svg { filter: drop-shadow(0 0 6px rgba(255,159,28,.5)); }
+
+    /* Headline gradient + shimmer */
+    .hero h1, .game-head h2 {
+      background: linear-gradient(100deg, #fff 0%, #fff 40%, #ffc46b 50%, #fff 60%, #fff 100%);
+      background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: shimmer 7s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+    .sec-head h2 { background: linear-gradient(180deg, #fff, #b9bec8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; }
+    .eyebrow::before { content: ""; width: 18px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+    .hero .eyebrow::before { display: none; }
+
+    /* Avatar: rotating glow ring */
+    .avatar::before {
+      content: ""; position: absolute; inset: -4px; border-radius: 26px; z-index: -1;
+      background: conic-gradient(from var(--ang, 0deg), #ff9f1c, transparent 30%, #ff5e3a 55%, transparent 80%, #ff9f1c);
+      filter: blur(10px); opacity: .75; animation: spin 6s linear infinite;
+    }
+    @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+    @keyframes spin { to { --ang: 360deg; } }
+    .avatar img { border-color: rgba(255,255,255,.18); }
+    .avatar { animation: float 6s ease-in-out infinite; }
+    @keyframes float { 50% { transform: translateY(-8px); } }
+
+    /* Buttons */
+    .copy {
+      position: relative; overflow: hidden; border-radius: 11px;
+      background: linear-gradient(135deg, #ffb340, #ff7a2f); box-shadow: 0 8px 22px -8px rgba(255,130,40,.8);
+    }
+    .copy::after {
+      content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-20deg);
+      animation: sheen 4.5s ease-in-out infinite;
+    }
+    @keyframes sheen { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+    .copy.done { background: linear-gradient(135deg, #46e891, #22c06e); }
+    .maps button.active { background: linear-gradient(135deg, #ffb340, #ff7a2f); border-color: transparent; box-shadow: 0 6px 18px -6px rgba(255,130,40,.8); }
+    .chip, .pv-nav { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(10,10,14,.45); }
+
+    /* Footer + toast */
+    footer { border-top: 1px solid var(--glass-line); background: rgba(10,11,15,.35); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+    .foot { justify-content: center; text-align: center; gap: 8px 24px; }
+    #toast { background: rgba(28,31,37,.7); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-color: var(--glass-line); border-radius: 14px; }
+
+    /* Entrance animations */
+    .js .reveal { opacity: 0; transform: translateY(28px) scale(.985); filter: blur(8px);
+      transition: opacity .9s var(--ease), transform .9s var(--ease), filter .9s var(--ease); }
+    .js .reveal.in { opacity: 1; transform: none; filter: none; }
+    .js .reveal .item, .js .reveal .tile, .js .reveal .stat {
+      opacity: 0; transform: translateY(16px);
+      transition: opacity .7s var(--ease), transform .7s var(--ease), border-color .3s, background .3s;
+      transition-delay: calc(var(--i, 0) * 60ms + 120ms);
+    }
+    .js .reveal.in .item, .js .reveal.in .tile, .js .reveal.in .stat { opacity: 1; transform: none; }
+    .js .reveal.in .item:hover { transform: translateY(-4px); transition-delay: 0s; }
+    .js .reveal.in .tile:hover { transform: translateY(-3px); transition-delay: 0s; }
+    .game.enter, .hero.enter { animation: pageIn .7s var(--ease); }
+    @keyframes pageIn { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } }
+
+    /* Lighter effects on phones for smooth scrolling */
+    @media (max-width: 600px) {
+      .blob { filter: blur(60px); }
+      :root { --blur: blur(12px) saturate(140%); }
+    }
+    /* Avatar corner brackets breathe in/out like a crosshair spreading and recovering */
+    .avatar .corner { animation: xhair 2.4s cubic-bezier(.45,0,.2,1) infinite; filter: drop-shadow(0 0 6px rgba(255,159,28,.6)); }
+    .avatar .c1 { --dx: -10px; --dy: -10px; }
+    .avatar .c2 { --dx:  10px; --dy: -10px; }
+    .avatar .c3 { --dx: -10px; --dy:  10px; }
+    .avatar .c4 { --dx:  10px; --dy:  10px; }
+    @keyframes xhair {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      12%      { transform: translate(var(--dx), var(--dy)) scale(1.15); } /* quick spread (shot) */
+      45%      { transform: translate(calc(var(--dx) * .35), calc(var(--dy) * .35)) scale(1.05); }
+      70%      { transform: translate(0, 0) scale(1); }                     /* recover */
+    }
+
+    /* Kick link under the name */
+    .kick {
+      display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; border-radius: 14px;
+      background: rgba(83,252,24,.08); border: 1px solid rgba(83,252,24,.28); color: #d9ffd0;
+      font: 600 14px 'Inter'; letter-spacing: .01em;
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      box-shadow: 0 10px 30px -14px rgba(83,252,24,.55), inset 0 1px 0 rgba(255,255,255,.06);
+      transition: transform .35s var(--ease), background .3s, border-color .3s, box-shadow .35s var(--ease);
+    }
+    .kick img { filter: drop-shadow(0 0 6px rgba(83,252,24,.7)); }
+    .kick svg { color: #53fc18; opacity: .7; transition: transform .35s var(--ease), opacity .3s; }
+    .kick:hover { transform: translateY(-2px); background: rgba(83,252,24,.14); border-color: rgba(83,252,24,.55);
+      box-shadow: 0 16px 36px -14px rgba(83,252,24,.75), inset 0 1px 0 rgba(255,255,255,.08); }
+    .kick:hover svg { transform: translate(2px,-2px); opacity: 1; }
+    /* Bodycam wordmark: [BODY CAM] — white BODY, red CAM, red brackets */
+    .bc-logo { display: inline-flex; align-items: center; font: 700 15px/1 var(--display); letter-spacing: .06em; color: #fff; }
+    .bc-logo i { font-style: normal; color: #e01b1b; font-weight: 700; margin: 0 2px; transform: scaleY(1.25); }
+    .bc-logo em { font-style: normal; color: #ff2a2a; text-shadow: 0 0 10px rgba(255,30,30,.55); }
+    .links a .bc-logo { opacity: .75; transition: opacity .2s; }
+    .links a:hover .bc-logo, .links a.active .bc-logo { opacity: 1; }
+    /* nav version matches the banner: Anton, white BODY with RGB split, glowing red CAM + bar brackets */
+    .links a .bc-logo { font: 400 15px/1 'Anton', var(--display); letter-spacing: .04em; gap: 1px; }
+    .links a .bc-logo .w { color: #f4f4f4; text-shadow: 1px 0 rgba(255,0,0,.6), -1px 0 rgba(0,190,255,.4); }
+    .links a .bc-logo em { color: #ff1a1a; text-shadow: 0 0 8px rgba(255,20,20,.9); }
+    .links a .bc-logo .br { width: 4px; height: 17px; border: 2px solid #ff2020; box-shadow: 0 0 6px rgba(255,30,30,.9); margin: 0 4px; }
+    .links a .bc-logo .br.l { border-right: 0; }
+    .links a .bc-logo .br.r { border-left: 0; }
+    /* when Bodycam is active, the sliding pill turns into a dark red "recording" plate */
+    .links.bc-active .ind {
+      background: linear-gradient(135deg, #3d0303, #160000);
+      box-shadow: 0 6px 22px -4px rgba(255,20,20,.6), inset 0 0 0 1px rgba(255,40,40,.45), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    /* Live mini camera screen inside the Bodycam tab */
+    .links a.bc-tab { padding: 3px; }
+    .bc-mini {
+      position: relative; overflow: hidden; display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px 6px 6px; border-radius: 8px;
+      background: radial-gradient(ellipse 80% 120% at 45% 50%, rgba(95,0,0,.6), rgba(25,0,0,.8) 55%, #050000 95%);
+      border: 1px solid rgba(255,40,40,.28);
+      box-shadow: inset 0 0 14px rgba(0,0,0,.8);
+    }
+    .bc-mini::before { /* vertical scanlines */
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      background: repeating-linear-gradient(90deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+    }
+    .bc-mini::after { /* rolling flicker band */
+      content: ""; position: absolute; left: 0; right: 0; top: -50%; height: 200%; pointer-events: none; z-index: 3;
+      background: linear-gradient(180deg, transparent 40%, rgba(255,255,255,.09) 50%, transparent 60%);
+      animation: roll 3.5s linear infinite;
+    }
+    .bc-mini .bc-logo { position: relative; z-index: 1; animation: glitch 5s steps(1) infinite; opacity: 1 !important; }
+    .bc-mini .rec { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 4px;
+      font: 700 9px/1 var(--mono); letter-spacing: .14em; color: rgba(255,255,255,.85); }
+    .bc-mini .rec .dot { width: 6px; height: 6px; border-radius: 50%; background: #ff2a1a;
+      box-shadow: 0 0 6px #ff2a1a, 0 0 12px rgba(255,40,20,.6); animation: blink 1.2s steps(1) infinite; }
+    .links a.bc-tab:hover .bc-mini { border-color: rgba(255,60,60,.6); box-shadow: inset 0 0 14px rgba(0,0,0,.8), 0 0 14px -2px rgba(255,30,30,.6); }
+    .links a.bc-tab.active .bc-mini { border-color: rgba(255,70,70,.8); }
+    @media (max-width: 380px) {
+      .links a .bc-logo { font-size: 13px; } .links a .bc-logo .br { height: 15px; margin: 0 3px; }
+      .bc-mini { padding: 5px 7px 5px 4px; gap: 5px; }
+      .bc-mini .rec .t { display: none; } /* dot only on very small phones */
+    }
+    @media (prefers-reduced-motion: reduce) { .bc-mini::after, .bc-mini .bc-logo, .bc-mini .rec .dot { animation: none; } }
+    .bc-title { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; animation: none !important; color: #fff; }
+    .bc-title .bc-logo { font-size: inherit; letter-spacing: .04em; filter: drop-shadow(0 0 22px rgba(255,30,30,.25)); }
+    .bc-title .bc-logo i { margin: 0 .08em; }
+
+    /* Bodycam banner — camera-screen look: scanlines, red glow, timestamp, blinking REC */
+    .bc-banner {
+      position: relative; overflow: hidden; margin-top: 12px; border-radius: 20px;
+      padding: clamp(18px, 3vw, 28px) clamp(14px, 4vw, 40px) clamp(16px, 2.5vw, 24px);
+      background: radial-gradient(ellipse 70% 90% at 55% 50%, rgba(150,0,0,.55), rgba(40,0,0,.6) 45%, #050505 85%);
+      border: 1px solid rgba(255,40,40,.18);
+      box-shadow: 0 30px 60px -30px rgba(255,0,0,.45), inset 0 0 80px rgba(0,0,0,.8);
+      text-align: center;
+    }
+    .bc-banner::before { /* vertical scanlines */
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      background: repeating-linear-gradient(90deg, rgba(0,0,0,.42) 0 2px, transparent 2px 6px);
+      mix-blend-mode: multiply;
+    }
+    .bc-banner::after { /* rolling flicker band + vignette */
+      content: ""; position: absolute; inset: -20% 0; pointer-events: none; z-index: 3;
+      background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.05) 48%, transparent 52%),
+                  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.7));
+      animation: roll 6s linear infinite;
+    }
+    @keyframes roll { from { transform: translateY(-30%); } to { transform: translateY(30%); } }
+    .bc-meta {
+      position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 12px;
+      max-width: 820px; margin: 0 auto 6px; padding: 0 6%;
+      font: 700 clamp(9px, 1.4vw, 13px) var(--mono); letter-spacing: .12em; color: rgba(255,255,255,.75);
+      text-shadow: 1px 0 rgba(255,0,0,.6), -1px 0 rgba(0,200,255,.4);
+    }
+    .game-head h2.bc-word {
+      background: none; -webkit-background-clip: border-box; background-clip: border-box; color: inherit;
+      margin: 0; display: flex; justify-content: center;
+      font: 400 clamp(54px, 13vw, 132px)/1 'Anton', 'Rajdhani', sans-serif; letter-spacing: .01em;
+      animation: glitch 5s steps(1) infinite;
+    }
+    .bc-word {
+      position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: .04em;
+      font: 400 clamp(54px, 13vw, 132px)/1 'Anton', 'Rajdhani', sans-serif; letter-spacing: .01em;
+      animation: glitch 5s steps(1) infinite;
+    }
+    .bc-word .w, .bc-word .c {
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -12 9.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+              mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -12 9.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+      -webkit-mask-size: 220px; mask-size: 220px;
+    }
+    .bc-word .w { color: #f4f4f4; text-shadow: 3px 0 rgba(255,0,0,.55), -3px 0 rgba(0,190,255,.35), 0 0 24px rgba(255,255,255,.25); }
+    .bc-word .c { color: #ff1414; text-shadow: 0 0 18px rgba(255,20,20,.85), 0 0 46px rgba(255,0,0,.55); }
+    .bc-word .br { /* tall glowing brackets */
+      width: .16em; height: 1.08em; border: .065em solid #ff2020; border-radius: .02em;
+      box-shadow: 0 0 14px rgba(255,30,30,.85), inset 0 0 8px rgba(255,30,30,.5);
+      margin: 0 .14em;
+    }
+    .bc-word .br.l { border-right: 0; }
+    .bc-word .br.r { border-left: 0; }
+    @keyframes glitch {
+      0%, 91%, 100% { transform: none; filter: none; }
+      92% { transform: translateX(-3px) skewX(-4deg); filter: hue-rotate(-20deg); }
+      93% { transform: translateX(4px); }
+      94% { transform: translateX(-1px) skewX(2deg); }
+    }
+    .bc-rec {
+      position: relative; z-index: 1; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px;
+      font: 700 clamp(11px, 1.5vw, 14px) var(--mono); letter-spacing: .2em; color: rgba(255,255,255,.85);
+    }
+    .bc-rec .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff2a1a; box-shadow: 0 0 10px #ff2a1a, 0 0 20px rgba(255,40,20,.6); animation: blink 1.2s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: .15; } }
+    @media (prefers-reduced-motion: reduce) { .bc-banner::after, .bc-word, .bc-rec .dot { animation: none; } }
+
+    .socials { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    @media (min-width: 768px) { .socials { justify-content: flex-start; } }
+    .faceit-btn { background: rgba(255,85,0,.08); border-color: rgba(255,85,0,.3); color: #ffd9c7;
+      box-shadow: 0 10px 30px -14px rgba(255,85,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
+    .faceit-btn img { filter: drop-shadow(0 0 6px rgba(255,85,0,.7)); }
+    .faceit-btn svg { color: #ff5500; }
+    .faceit-btn:hover { background: rgba(255,85,0,.14); border-color: rgba(255,85,0,.55);
+      box-shadow: 0 16px 36px -14px rgba(255,85,0,.75), inset 0 1px 0 rgba(255,255,255,.08); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .blob, .avatar, .avatar::before, .avatar .corner, .hero h1, .game-head h2, .copy::after { animation: none; }
+      .js .reveal, .js .reveal .item, .js .reveal .tile, .js .reveal .stat { opacity: 1; transform: none; filter: none; transition: none; }
+      .game.enter, .hero.enter { animation: none; }
+    }
+  </style>
+  <script>document.documentElement.classList.add('js');</script>
 </head>
-<body class="bg-[#0a0a0a] text-neutral-200 overflow-x-hidden font-['Inter']">
+<body>
 
-    <!-- Loading Screen (Full Screen load.gif) -->
-    <div id="loading-screen" class="fixed inset-0 bg-[#0a0a0a] z-[100] flex items-center justify-center transition-opacity duration-700">
-        <!-- Fullscreen background gif -->
-        <img src="load.gif" alt="Loading..." class="absolute inset-0 w-full h-full object-cover" onerror="this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif'">
+  <!-- Animated background (blurred light blobs) -->
+  <div class="bg" aria-hidden="true">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span>
+    <span class="noise"></span>
+  </div>
+
+  <nav>
+    <div class="wrap nav-in">
+      <div class="links" id="links">
+        <!-- Add a new game: copy one <a> here + one <div class="game" data-game="..."> panel below -->
+        <a href="#setup" data-game="setup"><i data-lucide="cpu"></i>Setup</a>
+        <span class="sep"></span>
+        <a href="#cs2" data-game="cs2"><img class="glogo" src="https://cdn.simpleicons.org/counterstrike/ffffff" alt="">CS2</a>
+        <a href="#pubg" data-game="pubg"><img class="glogo" src="https://cdn.simpleicons.org/pubg/ffffff" alt="">PUBG</a>
+        <a href="#bodycam" data-game="bodycam" class="bc-tab" aria-label="Bodycam">
+          <span class="bc-mini">
+            <span class="bc-logo"><span class="br l"></span><span class="w">BODY</span><em>CAM</em><span class="br r"></span></span>
+            <span class="rec"><span class="dot"></span><span class="t">REC</span></span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-grid reveal">
+        <div class="avatar">
+          <img src="avatar.jpg" alt="oz3R" onerror="this.onerror=null;this.src='https://placehold.co/400x400/121419/ff9f1c?text=oz3R'">
+          <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>        </div>
+        <div>
+          <h1>oz3R</h1>
+          <div class="socials">
+            <a class="kick" href="https://kick.com/oz3rr" target="_blank" rel="noopener noreferrer" aria-label="Watch oz3R on Kick">
+              <img src="https://cdn.simpleicons.org/kick/53fc18" alt="" width="18" height="18">
+              <span>kick.com/oz3rr</span>
+              <i data-lucide="arrow-up-right"></i>
+            </a>
+            <a class="kick faceit-btn" href="https://www.faceit.com/en/players/oz3R" target="_blank" rel="noopener noreferrer" aria-label="oz3R on FACEIT">
+              <img src="https://cdn.simpleicons.org/faceit/ff5500" alt="" width="18" height="18">
+              <span>FACEIT</span>
+              <i data-lucide="arrow-up-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+  <!-- ==================== CS2 ==================== -->
+  <div class="game" data-game="cs2" id="game-cs2" hidden>
+    <div class="game-head reveal">
+      <div class="eyebrow">Game 01</div>
+      <h2>Counter-Strike 2</h2>
+      <div class="stats">
+        <div class="stat"><span>eDPI</span><b>1000</b></div>
+        <div class="stat"><span>Sensitivity</span><b>1.25<small>@ 800 DPI</small></b></div>
+        <div class="stat"><span>Resolution</span><b>1280×960<small>4:3</small></b></div>
+        <div class="stat"><span>Refresh rate</span><b>300<small>Hz</small></b></div>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div id="main-content" class="opacity-0 translate-x-full transition-transform duration-1000 ease-out">
-        
-        <!-- Navigation -->
-        <nav class="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold">P</span>
-                        </div>
-                        <span class="text-white font-bold text-lg hidden sm:block">PRO SETTINGS</span>
-                    </div>
+    <!-- Mouse -->
+    <section id="mouse" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Aim</div><h2>Mouse Settings</h2></div>
+      </div>
+      <div class="grid g-mouse">
+        <div class="card">
+          <div class="card-title"><i data-lucide="sliders-horizontal"></i>Sensitivity</div>
+          <dl class="rows">
+            <div class="row"><dt>DPI</dt><dd>800</dd></div>
+            <div class="row"><dt>In-game Sensitivity</dt><dd>1.25</dd></div>
+            <div class="row"><dt>eDPI</dt><dd class="on">1000</dd></div>
+            <div class="row"><dt>Zoom Sensitivity</dt><dd>1.10</dd></div>
+            <div class="row"><dt>Windows Sensitivity</dt><dd>6/11</dd></div>
+            <div class="row"><dt>Polling Rate</dt><dd>8000 Hz</dd></div>
+          </dl>
+        </div>
+        <div class="card sens">
+          <div class="card-title"><i data-lucide="ruler"></i>Distance per 360°</div>
+          <div>
+            <div class="big" id="cm360">41.6</div>
+            <div class="big-label">cm / 360° turn</div>
+          </div>
+          <div class="mini">
+            <div><span>eDPI</span><b>1000</b></div>
+            <div><span>Inches / 360°</span><b id="in360">16.4</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-                    <!-- Desktop Nav -->
-                    <div class="hidden md:flex items-center gap-1 bg-neutral-900/50 p-1 rounded-xl border border-white/5 overflow-x-auto no-scrollbar">
-                        <a href="#overview" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="overview">
-                            <i data-lucide="layout-grid" class="w-4 h-4"></i> Overview
-                        </a>
-                        <a href="#mouse" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="mouse">
-                            <i data-lucide="mouse" class="w-4 h-4"></i> Mouse
-                        </a>
-                        <a href="#video" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="video">
-                            <i data-lucide="monitor" class="w-4 h-4"></i> Video
-                        </a>
-                        <a href="#crosshair" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="crosshair">
-                            <i data-lucide="crosshair" class="w-4 h-4"></i> Crosshair
-                        </a>
-                        <a href="#gear" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="gear">
-                            <i data-lucide="headphones" class="w-4 h-4"></i> Gear
-                        </a>
-                        <a href="#pc" class="nav-link flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800" data-target="pc">
-                            <i data-lucide="cpu" class="w-4 h-4"></i> PC Specs
-                        </a>
-                    </div>
+    <!-- Video -->
+    <section id="video" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Graphics</div><h2>Video Settings</h2></div>
+      </div>
+      <div class="grid g-video">
+        <div class="card">
+          <div class="card-title"><i data-lucide="monitor"></i>Video</div>
+          <dl class="rows">
+            <div class="row"><dt>Resolution</dt><dd>1280×960</dd></div>
+            <div class="row"><dt>Aspect Ratio</dt><dd>4:3</dd></div>
+            <div class="row"><dt>Display Mode</dt><dd>Fullscreen</dd></div>
+            <div class="row"><dt>Refresh Rate</dt><dd>300 Hz</dd></div>
+            <div class="row"><dt>Brightness</dt><dd>107%</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="card-title"><i data-lucide="settings-2"></i>Advanced Video</div>
+          <dl class="rows c2">
+            <div class="row"><dt>Boost Player Contrast</dt><dd>Disabled</dd></div>
+            <div class="row"><dt>V-Sync</dt><dd>Disabled</dd></div>
+            <div class="row"><dt>NVIDIA G-Sync</dt><dd>Disabled</dd></div>
+            <div class="row"><dt>NVIDIA Reflex</dt><dd>Disabled</dd></div>
+            <div class="row"><dt>Max FPS In Game</dt><dd class="on">450</dd></div>
+            <div class="row"><dt>Max FPS In Menus</dt><dd>300</dd></div>
+            <div class="row"><dt>Video Preset</dt><dd>Custom</dd></div>
+            <div class="row"><dt>MSAA Mode</dt><dd>None</dd></div>
+            <div class="row"><dt>Global Shadow Quality</dt><dd class="on">High</dd></div>
+            <div class="row"><dt>Dynamic Shadows</dt><dd>All</dd></div>
+            <div class="row"><dt>Model / Texture Detail</dt><dd>Low</dd></div>
+            <div class="row"><dt>Texture Filtering</dt><dd>Bilinear</dd></div>
+            <div class="row"><dt>Shader Detail</dt><dd>Low</dd></div>
+            <div class="row"><dt>Particle Detail</dt><dd>Low</dd></div>
+            <div class="row"><dt>Ambient Occlusion</dt><dd>Disabled</dd></div>
+            <div class="row"><dt>High Dynamic Range</dt><dd>Quality</dd></div>
+            <div class="row"><dt>FidelityFX Super Res.</dt><dd>Disabled</dd></div>
+          </dl>
+        </div>
+      </div>
 
-                    <!-- Mobile Menu Button -->
-                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-neutral-400 hover:bg-neutral-800 transition-colors">
-                        <i data-lucide="menu" class="w-6 h-6" id="menu-icon"></i>
-                        <i data-lucide="x" class="w-6 h-6 hidden" id="close-icon"></i>
-                    </button>
-                </div>
-            </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title"><i data-lucide="eye"></i>Viewmodel</div>
+        <div class="tiles">
+          <div class="tile"><span>FOV</span><b>68</b></div>
+          <div class="tile"><span>Offset X</span><b>1</b></div>
+          <div class="tile"><span>Offset Y</span><b>1</b></div>
+          <div class="tile"><span>Offset Z</span><b>-1</b></div>
+        </div>
+        <div class="code">
+          <code id="vm-cmd">viewmodel_fov 68; viewmodel_offset_x 1; viewmodel_offset_y 1; viewmodel_offset_z -1; viewmodel_presetpos 0;</code>
+          <button class="copy" data-copy="#vm-cmd"><i data-lucide="copy"></i>Copy</button>
+        </div>
+      </div>
+    </section>
 
-            <!-- Mobile Navigation Menu -->
-            <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-800 bg-[#0a0a0a] px-4 pt-2 pb-4 space-y-1 shadow-2xl">
-                <a href="#overview" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="layout-grid" class="w-4 h-4"></i> Overview
-                </a>
-                <a href="#mouse" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="mouse" class="w-4 h-4"></i> Mouse
-                </a>
-                <a href="#video" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="monitor" class="w-4 h-4"></i> Video
-                </a>
-                <a href="#crosshair" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="crosshair" class="w-4 h-4"></i> Crosshair
-                </a>
-                <a href="#gear" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="headphones" class="w-4 h-4"></i> Gear
-                </a>
-                <a href="#pc" class="mobile-nav-link flex items-center gap-2 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all whitespace-nowrap rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
-                    <i data-lucide="cpu" class="w-4 h-4"></i> PC Specs
-                </a>
-            </div>
-        </nav>
+    <!-- Crosshair -->
+    <section id="crosshair" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Aim</div><h2>Crosshair</h2></div>
+      </div>
+      <div class="card">
+        <div class="preview" id="preview">
+          <img class="map" id="map-img" src="" alt="">
+          <div class="xh">
+            <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+              <g stroke="rgb(50,255,0)" stroke-width="0.8" stroke-linecap="square">
+                <line x1="50" y1="48.5" x2="50" y2="45.5"/>
+                <line x1="51.5" y1="50" x2="54.5" y2="50"/>
+                <line x1="50" y1="51.5" x2="50" y2="54.5"/>
+                <line x1="48.5" y1="50" x2="45.5" y2="50"/>
+              </g>
+            </svg>
+          </div>
+          <div class="pv-top">
+            <span class="chip" id="map-name">Dust 2</span>
+            <button class="chip" id="zoom-btn" aria-pressed="false"><i data-lucide="zoom-in"></i><span>Zoom</span></button>
+          </div>
+          <button class="pv-nav pv-prev" id="prev" aria-label="Previous map"><i data-lucide="chevron-left"></i></button>
+          <button class="pv-nav pv-next" id="next" aria-label="Next map"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="maps" id="maps"></div>
 
-        <!-- Hero Profile Section -->
-        <header id="overview" class="relative pt-20 pb-12 md:pt-32 md:pb-24 overflow-hidden scroll-mt-24">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-[#0a0a0a] to-[#0a0a0a]"></div>
-            <div class="max-w-5xl mx-auto px-4 relative z-10">
-                <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                    <div class="relative group">
-                        <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-                        <div class="relative w-32 h-32 md:w-48 md:h-48 rounded-full bg-neutral-950 p-1">
-                            <!-- Updated avatar source to 'avatar.jpg' -->
-                            <img src="avatar.jpg" alt="oz3R Avatar" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.src='https://placehold.co/400x400/1a1a1a/3b82f6?text=AVATAR'">
-                        </div>
-                        <div class="absolute bottom-2 right-2 w-5 h-5 md:w-7 md:h-7 bg-green-500 rounded-full border-[4px] border-[#0a0a0a]" title="Online"></div>
-                    </div>
-                    
-                    <div class="text-center md:text-left flex-1">
-                        <div class="flex flex-col md:flex-row items-center gap-3 mb-4">
-                            <h1 class="text-4xl md:text-6xl font-black text-white tracking-tighter">oz3R</h1>
-                            <span class="bg-blue-600/20 text-blue-400 text-xs md:text-sm px-3 py-1 rounded-full font-bold uppercase border border-blue-500/30">Pro Player</span>
-                        </div>
-                        
-                        <a href="https://www.faceit.com/en/players/oz3R" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-lg md:text-xl text-white/80 hover:text-blue-400 font-medium leading-relaxed mb-6 transition-all group bg-neutral-900/50 px-4 py-2 rounded-xl border border-white/5 hover:border-blue-500/30">
-                            <img src="https://cdn.simpleicons.org/faceit/white" alt="FACEIT" class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
-                            <span>faceit.com/en/players/oz3R</span>
-                            <i data-lucide="external-link" class="w-4 h-4 opacity-50 group-hover:opacity-100"></i>
-                        </a>
+        <dl class="rows c3">
+          <div class="row"><dt>Style</dt><dd>Classic Static</dd></div>
+          <div class="row"><dt>Follow Recoil</dt><dd>No</dd></div>
+          <div class="row"><dt>Dot</dt><dd>No</dd></div>
+          <div class="row"><dt>Length</dt><dd>1.5</dd></div>
+          <div class="row"><dt>Thickness</dt><dd>0.4</dd></div>
+          <div class="row"><dt>Gap</dt><dd>-3.0</dd></div>
+          <div class="row"><dt>Outline</dt><dd>No</dd></div>
+          <div class="row"><dt>Color</dt><dd><span class="sw" style="background:rgb(50,255,0)"></span>50, 255, 0</dd></div>
+          <div class="row"><dt>Alpha</dt><dd>Yes · 255</dd></div>
+        </dl>
 
-                        <div class="flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
-                            <div class="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 rounded-full text-xs md:text-sm font-medium text-neutral-300 border border-neutral-800">
-                                <i data-lucide="crosshair" class="w-3.5 h-3.5 md:w-4 md:h-4 text-neutral-500"></i> Rifler
-                            </div>
-                            <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-full text-xs md:text-sm font-medium border border-blue-500/20">
-                                <i data-lucide="user" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Team Secret
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <div class="code">
+          <code class="hl" id="xh-code">CSyjQhnJw29uh369FOKBLdUzxraJxcyYd3cJ9HADTeOSsc</code>
+          <button class="copy" data-copy="#xh-code"><i data-lucide="copy"></i>Copy code</button>
+        </div>
+      </div>
+    </section>
 
-        <main class="max-w-5xl mx-auto px-4 pb-24 flex flex-col gap-16 md:gap-24">
-            
-            <!-- Mouse Settings -->
-            <section id="mouse" class="scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 md:mb-6 border-b border-neutral-800 pb-3">
-                    <i data-lucide="mouse" class="w-5 h-5 md:w-6 md:h-6 text-blue-500"></i>
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Mouse Settings</h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-8 bg-[#111] p-6 md:p-8 rounded-2xl border border-neutral-800">
-                    <div class="md:col-span-3 space-y-1">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i data-lucide="settings" class="w-5 h-5 text-neutral-500"></i> Sensitivity
-                            </h3>
-                            <span class="text-xs font-bold text-neutral-500 bg-neutral-900 px-2 py-1 rounded uppercase">Config</span>
-                        </div>
-                        <!-- Setting Rows -->
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">DPI</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">800</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">In-game Sensitivity</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">1.25</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">eDPI</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">800</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Zoom Sensitivity</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">1.10</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Windows Sensitivity</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">6/11</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50 last:border-0">
-                            <span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Polling Rate</span>
-                            <span class="text-white font-semibold text-sm md:text-base text-right">8000 Hz</span>
-                        </div>
-                    </div>
-                    <div class="md:col-span-2 flex flex-col justify-center items-center bg-neutral-950/50 rounded-xl p-8 border border-neutral-900">
-                        <i data-lucide="mouse" class="w-24 h-24 text-neutral-800 mb-4" stroke-width="1"></i>
-                        <p class="text-neutral-500 text-sm text-center font-medium">
-                            Current Mouse Configuration
-                        </p>
-                    </div>
-                </div>
-            </section>
+  </div>
+  <!-- ==================== /CS2 ==================== -->
 
-            <!-- Video Settings -->
-            <section id="video" class="scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 md:mb-6 border-b border-neutral-800 pb-3">
-                    <i data-lucide="monitor" class="w-5 h-5 md:w-6 md:h-6 text-blue-500"></i>
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Video Settings</h2>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Video -->
-                    <div class="bg-[#111] p-6 md:p-8 rounded-2xl border border-neutral-800 h-full">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i data-lucide="monitor" class="w-5 h-5 text-neutral-500"></i> Video
-                            </h3>
-                        </div>
-                        <div class="space-y-1">
-                             <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Resolution</span><span class="text-white font-semibold text-sm md:text-base text-right">1280x960</span></div>
-                             <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Aspect Ratio</span><span class="text-white font-semibold text-sm md:text-base text-right">4:3</span></div>
-                             <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Display Mode</span><span class="text-white font-semibold text-sm md:text-base text-right">Fullscreen</span></div>
-                             <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Refresh Rate</span><span class="text-white font-semibold text-sm md:text-base text-right">300 Hz</span></div>
-                             <div class="flex justify-between items-center py-3 border-b border-neutral-800/50 last:border-0"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Brightness</span><span class="text-white font-semibold text-sm md:text-base text-right">107%</span></div>
-                        </div>
-                    </div>
-                    <!-- Advanced Video -->
-                    <div class="bg-[#111] p-6 md:p-8 rounded-2xl border border-neutral-800 lg:col-span-2 h-full">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i data-lucide="settings" class="w-5 h-5 text-neutral-500"></i> Advanced Video
-                            </h3>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-1">
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Boost Player Contrast</span><span class="text-white font-semibold text-sm md:text-base text-right">Disabled</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">V-Sync</span><span class="text-white font-semibold text-sm md:text-base text-right">Disabled</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">MSAA Mode</span><span class="text-white font-semibold text-sm md:text-base text-right">4x MSAA</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Global Shadow Quality</span><span class="text-white font-semibold text-sm md:text-base text-right">Low</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Model / Texture Detail</span><span class="text-white font-semibold text-sm md:text-base text-right">Low</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Texture Filtering Mode</span><span class="text-white font-semibold text-sm md:text-base text-right">Bilinear</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Shader Detail</span><span class="text-white font-semibold text-sm md:text-base text-right">Low</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Particle Detail</span><span class="text-white font-semibold text-sm md:text-base text-right">Low</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Ambient Occlusion</span><span class="text-white font-semibold text-sm md:text-base text-right">Disabled</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">High Dynamic Range</span><span class="text-white font-semibold text-sm md:text-base text-right">Quality</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">FidelityFX Super Resolution</span><span class="text-white font-semibold text-sm md:text-base text-right text-xs sm:text-sm md:text-base">Disabled (Highest Quality)</span></div>
-                            <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">NVIDIA Reflex Low Latency</span><span class="text-white font-semibold text-sm md:text-base text-right">Disabled</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Viewmodel -->
-                <div class="mt-6 bg-[#111] p-6 md:p-8 rounded-2xl border border-neutral-800">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i data-lucide="eye" class="w-5 h-5 text-neutral-500"></i> Viewmodel
-                        </h3>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="bg-neutral-950 p-4 rounded-xl text-center border border-neutral-900">
-                            <span class="block text-neutral-500 text-[10px] md:text-xs uppercase font-bold mb-2 tracking-widest">FOV</span>
-                            <span class="text-white font-mono text-xl md:text-2xl font-semibold">68</span>
-                        </div>
-                        <div class="bg-neutral-950 p-4 rounded-xl text-center border border-neutral-900">
-                            <span class="block text-neutral-500 text-[10px] md:text-xs uppercase font-bold mb-2 tracking-widest">Offset X</span>
-                            <span class="text-white font-mono text-xl md:text-2xl font-semibold">1</span>
-                        </div>
-                        <div class="bg-neutral-950 p-4 rounded-xl text-center border border-neutral-900">
-                            <span class="block text-neutral-500 text-[10px] md:text-xs uppercase font-bold mb-2 tracking-widest">Offset Y</span>
-                            <span class="text-white font-mono text-xl md:text-2xl font-semibold">1</span>
-                        </div>
-                        <div class="bg-neutral-950 p-4 rounded-xl text-center border border-neutral-900">
-                            <span class="block text-neutral-500 text-[10px] md:text-xs uppercase font-bold mb-2 tracking-widest">Offset Z</span>
-                            <span class="text-white font-mono text-xl md:text-2xl font-semibold">-1</span>
-                        </div>
-                    </div>
-                    <div class="mt-4 bg-neutral-950 p-4 rounded-xl font-mono text-xs md:text-sm text-neutral-400 overflow-x-auto border border-neutral-900 flex items-center justify-between gap-4">
-                        <code class="whitespace-nowrap">viewmodel_fov 68; viewmodel_offset_x 1; viewmodel_offset_y 1; viewmodel_offset_z -1; viewmodel_presetpos 0;</code>
-                        <button onclick="handleCopy('viewmodel_fov 68; viewmodel_offset_x 1; viewmodel_offset_y 1; viewmodel_offset_z -1; viewmodel_presetpos 0;')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors shrink-0">
-                            COPY
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Crosshair Settings -->
-            <section id="crosshair" class="scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 md:mb-6 border-b border-neutral-800 pb-3">
-                    <i data-lucide="crosshair" class="w-5 h-5 md:w-6 md:h-6 text-blue-500"></i>
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Crosshair</h2>
-                </div>
-                <div class="bg-[#111] p-6 md:p-8 rounded-2xl border border-neutral-800">
-                    
-                    <!-- Crosshair Preview Slider -->
-                    <div class="relative h-48 md:h-72 bg-neutral-950 rounded-xl overflow-hidden mb-8 border border-neutral-900 group">
-                        <!-- Map Background Image -->
-                        <div class="absolute inset-0 transition-all duration-500 ease-in-out">
-                            <img id="map-bg" src="" class="w-full h-full object-cover opacity-50 group-hover:opacity-75 transition-opacity duration-500" alt="Map Background" />
-                        </div>
-
-                        <!-- Slider Controls -->
-                        <button id="prev-map" class="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                            <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                        </button>
-                        <button id="next-map" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                        </button>
-
-                        <!-- Slider Dots -->
-                        <div id="slider-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                            <!-- Dots will be generated by JS -->
-                        </div>
-                        
-                        <!-- SVG Crosshair Overlay -->
-                        <div class="absolute inset-0 flex items-center justify-center z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g class="crosshair-lines" stroke="rgb(50,255,0)" stroke-width="0.8" stroke-linecap="square">
-                                    <!-- Top Line -->
-                                    <line x1="50" y1="48.5" x2="50" y2="45.5" />
-                                    <!-- Right Line -->
-                                    <line x1="51.5" y1="50" x2="54.5" y2="50" />
-                                    <!-- Bottom Line -->
-                                    <line x1="50" y1="51.5" x2="50" y2="54.5" />
-                                    <!-- Left Line -->
-                                    <line x1="48.5" y1="50" x2="45.5" y2="50" />
-                                </g>
-                            </svg>
-                        </div>
-                        <div id="map-name-label" class="absolute bottom-3 right-3 bg-black/50 text-neutral-400 text-xs px-2 py-1 rounded z-20">
-                            Preview on Dust 2
-                        </div>
-                    </div>
-
-                    <!-- Settings Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-1">
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Style</span><span class="text-white font-semibold text-sm md:text-base text-right">Classic Static</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Follow Recoil</span><span class="text-white font-semibold text-sm md:text-base text-right">No</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Dot</span><span class="text-white font-semibold text-sm md:text-base text-right">No</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Length</span><span class="text-white font-semibold text-sm md:text-base text-right">1.5</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Thickness</span><span class="text-white font-semibold text-sm md:text-base text-right">0.4</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Gap</span><span class="text-white font-semibold text-sm md:text-base text-right">-3.0</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Outline</span><span class="text-white font-semibold text-sm md:text-base text-right">No</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Color</span><span class="text-white font-semibold text-sm md:text-base text-right">Custom (50, 255, 0)</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Red</span><span class="text-white font-semibold text-sm md:text-base text-right">50</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Green</span><span class="text-white font-semibold text-sm md:text-base text-right">255</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Blue</span><span class="text-white font-semibold text-sm md:text-base text-right">0</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Alpha</span><span class="text-white font-semibold text-sm md:text-base text-right">Yes</span></div>
-                        <div class="flex justify-between items-center py-3 border-b border-neutral-800/50"><span class="text-neutral-400 font-medium text-sm md:text-base pr-4">Alpha Value</span><span class="text-white font-semibold text-sm md:text-base text-right">255</span></div>
-                    </div>
-
-                    <!-- Copy Code Block -->
-                    <div class="mt-8 bg-neutral-950 p-4 rounded-xl font-mono text-xs md:text-sm text-neutral-400 overflow-x-auto border border-neutral-900 flex items-center justify-between gap-4">
-                        <code class="whitespace-nowrap text-blue-400 font-bold">CSGO-e5LF5-YDKUz-bGwRx-mKUA2-hif4D</code>
-                        <button onclick="handleCopy('CSGO-RbzGo-uRh3G-Nfa7P-zjGKi-PRX9G')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors shrink-0 flex items-center gap-2">
-                            COPY CODE
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Gear -->
-            <section id="gear" class="scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 md:mb-6 border-b border-neutral-800 pb-3">
-                    <i data-lucide="headphones" class="w-5 h-5 md:w-6 md:h-6 text-blue-500"></i>
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">Gear</h2>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Monitor -->
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
-                            <i data-lucide="monitor" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1 flex flex-col">
-                            <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Monitor</p>
-                            <h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Asus Tuf Gaming VG259QMRL5A</h3>
-                        </div>
-                    </div>
-                    <!-- Mouse -->
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
-                            <i data-lucide="mouse-pointer-2" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1 flex flex-col">
-                            <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Mouse</p>
-                            <h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Razer Viper V3 Pro</h3>
-                        </div>
-                    </div>
-                    <!-- Keyboard -->
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
-                            <i data-lucide="keyboard" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1 flex flex-col">
-                            <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Keyboard</p>
-                            <h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">ATK RS7 Air</h3>
-                        </div>
-                    </div>
-                    <!-- Headset -->
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
-                            <i data-lucide="headphones" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1 flex flex-col">
-                            <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Headset</p>
-                            <h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Razer Moray IEM
-                            + Razer Seiren V3 Mini Microphone</h3>
-                        </div>
-                    </div>
-                    <!-- Mousepad -->
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
-                            <i data-lucide="mouse" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i>
-                        </div>
-                        <div class="overflow-hidden flex-1 flex flex-col">
-                            <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Mousepad</p>
-                            <h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Razer Sphex V3 Large</h3>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PC Specs -->
-            <section id="pc" class="scroll-mt-24">
-                <div class="flex items-center gap-2 mb-4 md:mb-6 border-b border-neutral-800 pb-3">
-                    <i data-lucide="cpu" class="w-5 h-5 md:w-6 md:h-6 text-blue-500"></i>
-                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight">PC Specs</h2>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="cpu" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">CPU</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">AMD Ryzen 7 9800X3D</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="circuit-board" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">GPU</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Pny RTX 5070 Epic-X</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="layout-grid" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Motherboard</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Gigabyte B850M Force</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="zap" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">RAM</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Patriot Viper Venom 16 GB 6000 MHz CL30 (16x2)</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="disc" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Storage (SSD)</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">Samsung 980 Pro 500GB NVMe M.2</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="thermometer" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Cooler</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">MSI Mag Coreliquid 240R V2</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="box" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Case</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">MSI MAG Forge 101M</h3></div>
-                    </div>
-                    <div class="group bg-neutral-900/50 hover:bg-neutral-800 p-4 rounded-xl flex items-start gap-4 transition-all duration-300 border border-neutral-800 hover:border-blue-500/30 h-full">
-                        <div class="bg-neutral-950 p-3 rounded-lg shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="zap" class="w-6 h-6 md:w-8 md:h-8 text-blue-500"></i></div>
-                        <div class="overflow-hidden flex-1 flex flex-col"><p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase tracking-wider mb-1.5">Power Supply</p><h3 class="text-white font-medium text-sm md:text-base leading-tight flex-grow">MSI MPG A650GF 650W 80+ Gold PSU</h3></div>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-        
-        <footer class="bg-[#0a0a0a] py-12 text-center border-t border-neutral-900">
-            <div class="max-w-5xl mx-auto px-4 flex flex-col items-center gap-4">
-                <div class="w-10 h-10 bg-neutral-900 rounded-xl flex items-center justify-center">
-                    <span class="text-blue-600 font-black text-xl">P</span>
-                </div>
-                <div class="text-neutral-500 text-sm">
-                    <p>© 2024 Pro Settings Profile. All rights reserved.</p>
-                    <p class="mt-1 opacity-60">This site was created for personal use by ♡ oz3R</p>
-                </div>
-            </div>
-        </footer>
+  <!-- ==================== PUBG ==================== -->
+  <div class="game" data-game="pubg" id="game-pubg" hidden>
+    <div class="game-head reveal">
+      <div class="eyebrow">Game 02</div>
+      <h2>PUBG: Battlegrounds</h2>
+      <div class="stats">
+        <div class="stat"><span>General Sens</span><b>40</b></div>
+        <div class="stat"><span>Vertical Mult.</span><b>1.15</b></div>
+        <div class="stat"><span>Resolution</span><b>1920×1080</b></div>
+        <div class="stat"><span>FPP FOV</span><b>103</b></div>
+      </div>
     </div>
 
-    <script>
-        // Map Data
-        const MAPS = [
-            { name: 'Inferno', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/inferno.jpeg' },
-            { name: 'Vertigo', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/vertigo.jpeg' },
-            { name: 'Anubis', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/anubis.jpeg' },
-            { name: 'Ancient', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/ancient.jpeg' },
-            { name: 'Dust 2', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/dust2.jpeg' },
-            { name: 'Mirage', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/mirage.jpeg' },
-            { name: 'Nuke', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/nuke.jpeg' },
-            { name: 'Overpass', url: 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/overpass.jpeg' },
-        ];
-        let currentMapIndex = 4; // Dust 2
+    <section id="pubg-mouse" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Aim</div><h2>Sensitivity</h2></div>
+      </div>
+      <div class="grid g-mouse">
+        <div class="card">
+          <div class="card-title"><i data-lucide="sliders-horizontal"></i>Mouse</div>
+          <dl class="rows">
+            <div class="row"><dt>General Sensitivity</dt><dd class="on">40</dd></div>
+            <div class="row"><dt>Vertical Sensitivity Multiplier</dt><dd>1.15</dd></div>
+            <div class="row"><dt>Aim Sensitivity</dt><dd>38</dd></div>
+            <div class="row"><dt>ADS Sensitivity</dt><dd>38</dd></div>
+            <div class="row"><dt>Invert Mouse</dt><dd>Disable</dd></div>
+            <div class="row"><dt>Universal Sens. for All Scopes</dt><dd>Disable</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="card-title"><i data-lucide="scan-eye"></i>Scopes</div>
+          <div class="tiles t3">
+            <div class="tile"><span>2x</span><b>38</b></div>
+            <div class="tile"><span>3x</span><b>38</b></div>
+            <div class="tile"><span>4x</span><b>36</b></div>
+            <div class="tile"><span>6x</span><b>34</b></div>
+            <div class="tile"><span>8x</span><b>32</b></div>
+            <div class="tile"><span>15x</span><b>28</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        // --- Initialization & Loading ---
-        window.addEventListener('load', () => {
-            // Initialize Lucide Icons
-            lucide.createIcons();
-            
-            // Initialize Map Slider
-            updateSlider();
+    <section id="pubg-graphics" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Graphics</div><h2>Graphics Settings</h2></div>
+      </div>
+      <div class="grid g-video">
+        <div class="card">
+          <div class="card-title"><i data-lucide="monitor"></i>Basic</div>
+          <dl class="rows">
+            <div class="row"><dt>Display Mode</dt><dd>Full Screen</dd></div>
+            <div class="row"><dt>Resolution</dt><dd>1920×1080</dd></div>
+            <div class="row"><dt>In-Game FPS Cap</dt><dd class="on">Unlimited</dd></div>
+            <div class="row"><dt>Lobby FPS Cap</dt><dd>60 FPS</dd></div>
+            <div class="row"><dt>Smoothed Frame Rate</dt><dd>Disable</dd></div>
+            <div class="row"><dt>Universal Brightness</dt><dd>Enable</dd></div>
+            <div class="row"><dt>Brightness</dt><dd>70</dd></div>
+            <div class="row"><dt>NVIDIA Highlights</dt><dd>Disable</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="card-title"><i data-lucide="settings-2"></i>Advanced</div>
+          <dl class="rows c2">
+            <div class="row"><dt>Overall Quality</dt><dd>Custom</dd></div>
+            <div class="row"><dt>Post-Processing</dt><dd>Very Low</dd></div>
+            <div class="row"><dt>Shadows</dt><dd>Very Low</dd></div>
+            <div class="row"><dt>Textures</dt><dd class="on">Ultra</dd></div>
+            <div class="row"><dt>Effects</dt><dd>Very Low</dd></div>
+            <div class="row"><dt>Foliage</dt><dd>Very Low</dd></div>
+            <div class="row"><dt>View Distance</dt><dd>Very Low</dd></div>
+            <div class="row"><dt>Anti-Aliasing</dt><dd class="on">Ultra</dd></div>
+            <div class="row"><dt>Resolution Upscaling</dt><dd>Disable</dd></div>
+            <div class="row"><dt>DirectX Version</dt><dd>DX11 Enhanced</dd></div>
+            <div class="row"><dt>Sharpen</dt><dd>Disable</dd></div>
+            <div class="row"><dt>Motion Blur</dt><dd>Disable</dd></div>
+            <div class="row"><dt>Render Scale</dt><dd>100</dd></div>
+            <div class="row"><dt>FPP Camera FOV</dt><dd class="on">103</dd></div>
+            <div class="row"><dt>V-Sync</dt><dd>Disable</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
 
-            // Simulate Loading (2.5s)
-            setTimeout(() => {
-                const loadingScreen = document.getElementById('loading-screen');
-                const mainContent = document.getElementById('main-content');
-                
-                loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-                mainContent.classList.remove('opacity-0', 'translate-x-10');
-                mainContent.classList.add('opacity-100', 'translate-x-0');
-            }, 2500);
-        });
+    <section id="pubg-crosshair" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Aim</div><h2>Crosshair</h2></div>
+      </div>
+      <div class="card">
+        <div class="preview pubg-pv">
+          <div class="xh">
+            <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+              <g stroke="#000" stroke-width="3.2" stroke-linecap="butt">
+                <line x1="50" y1="36" x2="50" y2="44"/><line x1="50" y1="56" x2="50" y2="64"/>
+                <line x1="36" y1="50" x2="44" y2="50"/><line x1="56" y1="50" x2="64" y2="50"/>
+              </g>
+              <g stroke="rgb(0,255,255)" stroke-width="1.6" stroke-linecap="butt">
+                <line x1="50" y1="36.8" x2="50" y2="43.2"/><line x1="50" y1="56.8" x2="50" y2="63.2"/>
+                <line x1="36.8" y1="50" x2="43.2" y2="50"/><line x1="56.8" y1="50" x2="63.2" y2="50"/>
+              </g>
+            </svg>
+          </div>
+          <div class="pv-top"><span class="chip">Weapon type · General</span></div>
+        </div>
+        <dl class="rows c3">
+          <div class="row"><dt>Color</dt><dd><span class="sw" style="background:rgb(0,255,255)"></span>0, 255, 255</dd></div>
+          <div class="row"><dt>Line Shape</dt><dd>Cross</dd></div>
+          <div class="row"><dt>Line Length</dt><dd>15</dd></div>
+          <div class="row"><dt>Line Thickness</dt><dd>2</dd></div>
+          <div class="row"><dt>Line Opacity</dt><dd>100</dd></div>
+          <div class="row"><dt>Rotation / Angle</dt><dd>0 / 0</dd></div>
+          <div class="row"><dt>Dot Mode</dt><dd>Disable</dd></div>
+          <div class="row"><dt>Outline Color</dt><dd><span class="sw" style="background:#000;outline:1px solid #555"></span>0, 0, 0</dd></div>
+          <div class="row"><dt>Outline Thickness / Opacity</dt><dd>2 / 100</dd></div>
+        </dl>
+      </div>
+    </section>
 
-        // --- Mobile Menu Toggle ---
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuIcon = document.getElementById('menu-icon');
-        const closeIcon = document.getElementById('close-icon');
+    <section id="pubg-interface" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Gameplay</div><h2>Interface &amp; Map</h2></div>
+      </div>
+      <div class="card">
+        <dl class="rows c3">
+          <div class="row"><dt>Color Blind Mode</dt><dd>Normal</dd></div>
+          <div class="row"><dt>Weapon Slot HUD</dt><dd>Enable</dd></div>
+          <div class="row"><dt>Compass Background</dt><dd>Disable</dd></div>
+          <div class="row"><dt>Interaction Highlight</dt><dd>Enable</dd></div>
+          <div class="row"><dt>Loot Flash Effect</dt><dd>Pulse</dd></div>
+          <div class="row"><dt>Killfeed Limit</dt><dd>5</dd></div>
+          <div class="row"><dt>World Map Zoom Sens.</dt><dd>10</dd></div>
+          <div class="row"><dt>Minimap Desaturation</dt><dd>Enable</dd></div>
+          <div class="row"><dt>Minimap Dynamic Zoom</dt><dd>Enable</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
+  <!-- ==================== /PUBG ==================== -->
 
-        mobileMenuBtn.addEventListener('click', () => {
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            if (isOpen) {
-                mobileMenu.classList.add('hidden');
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
-            } else {
-                mobileMenu.classList.remove('hidden');
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
-            }
-        });
+  <!-- ==================== BODYCAM ==================== -->
+  <div class="game" data-game="bodycam" id="game-bodycam" hidden>
+    <div class="game-head reveal">
+      <div class="eyebrow">Game 03</div>
+      <h2>Bodycam</h2>
+      <div class="stats">
+        <div class="stat"><span>Sensitivity</span><b>0.60</b></div>
+        <div class="stat"><span>ADS Multiplier</span><b>0.40</b></div>
+        <div class="stat"><span>Resolution</span><b>1920×1080</b></div>
+        <div class="stat"><span>FPS Limit</span><b>300</b></div>
+      </div>
+    </div>
 
-        // Close mobile menu when a link is clicked
-        document.querySelectorAll('.mobile-nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
-            });
-        });
+    <section id="bodycam-controls" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Aim</div><h2>Controls</h2></div>
+      </div>
+      <div class="grid g-mouse">
+        <div class="card">
+          <div class="card-title"><i data-lucide="sliders-horizontal"></i>Camera</div>
+          <dl class="rows">
+            <div class="row"><dt>Sensitivity</dt><dd class="on">0.60</dd></div>
+            <div class="row"><dt>ADS Sensitivity Multiplier</dt><dd class="on">0.40</dd></div>
+            <div class="row"><dt>Invert Y-Axis</dt><dd>Off</dd></div>
+            <div class="row"><dt>Invert X-Axis</dt><dd>Off</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="card-title"><i data-lucide="keyboard"></i>Inputs</div>
+          <dl class="rows">
+            <div class="row"><dt>Sprint</dt><dd>Hold</dd></div>
+            <div class="row"><dt>Crouch</dt><dd>Toggle</dd></div>
+            <div class="row"><dt>Aim</dt><dd>Toggle</dd></div>
+            <div class="row"><dt>Lean</dt><dd>Hold</dd></div>
+            <div class="row"><dt>Pause</dt><dd>TAB / ESC</dd></div>
+            <div class="row"><dt>Push To Talk</dt><dd>V / Mouse 4</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
 
-        // --- Active Nav Link Highlighter on Scroll ---
-        const sections = document.querySelectorAll('header[id], section[id]');
-        const navLinks = document.querySelectorAll('.nav-link');
+    <section id="bodycam-video" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Graphics</div><h2>Video &amp; Graphics</h2></div>
+      </div>
+      <div class="grid g-video">
+        <div class="card">
+          <div class="card-title"><i data-lucide="monitor"></i>Video</div>
+          <dl class="rows">
+            <div class="row"><dt>Window Mode</dt><dd>Full Screen</dd></div>
+            <div class="row"><dt>Resolution</dt><dd>1920×1080</dd></div>
+            <div class="row"><dt>Upscaling Method</dt><dd class="on">Nvidia DLSS</dd></div>
+            <div class="row"><dt>Upscaling Quality</dt><dd>Balanced</dd></div>
+            <div class="row"><dt>Anti Aliasing Quality</dt><dd>High</dd></div>
+            <div class="row"><dt>Frame Generation</dt><dd>Off</dd></div>
+            <div class="row"><dt>VSync</dt><dd>Off</dd></div>
+            <div class="row"><dt>Framerate Limit</dt><dd class="on">300</dd></div>
+            <div class="row"><dt>Gamma</dt><dd>2.2</dd></div>
+            <div class="row"><dt>Color Correction</dt><dd>None</dd></div>
+          </dl>
+        </div>
+        <div class="card">
+          <div class="card-title"><i data-lucide="settings-2"></i>Graphics</div>
+          <dl class="rows c2">
+            <div class="row"><dt>Graphics Preset</dt><dd>Custom</dd></div>
+            <div class="row"><dt>Global Illumination</dt><dd class="on">Lumen Ultra</dd></div>
+            <div class="row"><dt>Reflections</dt><dd class="on">Lumen Ultra</dd></div>
+            <div class="row"><dt>Shadows</dt><dd>Medium</dd></div>
+            <div class="row"><dt>Textures</dt><dd>Ultra</dd></div>
+            <div class="row"><dt>Texture Filtering</dt><dd>16x Aniso</dd></div>
+            <div class="row"><dt>View Distance</dt><dd>High</dd></div>
+            <div class="row"><dt>Effects</dt><dd>High</dd></div>
+            <div class="row"><dt>Film Grain</dt><dd>Off</dd></div>
+            <div class="row"><dt>Image Sharpness</dt><dd>0.24</dd></div>
+            <div class="row"><dt>Motion Blur</dt><dd>Off</dd></div>
+            <div class="row"><dt>Foliage</dt><dd>Low</dd></div>
+            <div class="row"><dt>Shading</dt><dd>Low</dd></div>
+            <div class="row"><dt>Magnified Optics</dt><dd>Medium</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
 
-        function highlightNavLink() {
-            let scrollY = window.pageYOffset;
-            
-            sections.forEach(current => {
-                const sectionHeight = current.offsetHeight;
-                const sectionTop = current.offsetTop - 100; // Offset for better triggering
-                const sectionId = current.getAttribute('id');
-                
-                if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-                    navLinks.forEach(link => {
-                        link.classList.remove('text-white', 'bg-blue-600', 'shadow-lg', 'shadow-blue-500/20');
-                        link.classList.add('text-neutral-400', 'hover:text-white', 'hover:bg-neutral-800');
-                        if (link.getAttribute('data-target') === sectionId) {
-                            link.classList.remove('text-neutral-400', 'hover:text-white', 'hover:bg-neutral-800');
-                            link.classList.add('text-white', 'bg-blue-600', 'shadow-lg', 'shadow-blue-500/20');
-                        }
-                    });
-                }
-            });
-        }
-        window.addEventListener('scroll', highlightNavLink);
+    <section id="bodycam-audio" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Sound</div><h2>Audio</h2></div>
+      </div>
+      <div class="card">
+        <div class="tiles">
+          <div class="tile"><span>Master</span><b>50</b></div>
+          <div class="tile"><span>Sound FX</span><b>35</b></div>
+          <div class="tile"><span>Ambient</span><b>35</b></div>
+          <div class="tile"><span>Radio</span><b>45</b></div>
+          <div class="tile"><span>Music</span><b>45</b></div>
+          <div class="tile"><span>Interface</span><b>20</b></div>
+          <div class="tile"><span>Proximity Chat</span><b>0</b></div>
+          <div class="tile"><span>Voice Chat</span><b style="font-size:24px;line-height:1.45">Toggle</b></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <!-- ==================== /BODYCAM ==================== -->
 
+  <!-- ==================== SETUP (home page, shared by all games) ==================== -->
+  <div class="game" data-game="setup" id="game-setup">
+    <!-- Gear -->
+    <section id="gear" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Setup</div><h2>Gear</h2></div>
+      </div>
+      <div class="items i3">
+        <div class="item"><div class="ic"><i data-lucide="monitor"></i></div><div><span>Monitor</span><h3>Asus TUF Gaming VG259QMRL5A</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="mouse-pointer-2"></i></div><div><span>Mouse</span><h3>Razer Viper V3 Pro</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="keyboard"></i></div><div><span>Keyboard</span><h3>ATK RS7 Air</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="headphones"></i></div><div><span>Headset</span><h3>Razer Moray IEM<small>+ Razer Seiren V3 Mini mic</small></h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="square"></i></div><div><span>Mousepad</span><h3>Razer Sphex V3 Large</h3></div></div>
+      </div>
+    </section>
 
-        // --- Crosshair Map Slider ---
-        const mapBg = document.getElementById('map-bg');
-        const prevBtn = document.getElementById('prev-map');
-        const nextBtn = document.getElementById('next-map');
-        const dotsContainer = document.getElementById('slider-dots');
-        const mapNameLabel = document.getElementById('map-name-label');
+    <!-- PC -->
+    <section id="pc" class="reveal">
+      <div class="sec-head">
+        <div><div class="eyebrow">Hardware</div><h2>PC Specs</h2></div>
+      </div>
+      <div class="items i4">
+        <div class="item"><div class="ic"><i data-lucide="cpu"></i></div><div><span>CPU</span><h3>AMD Ryzen 7 9800X3D</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="layers"></i></div><div><span>GPU</span><h3>PNY RTX 5070 Epic-X</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="circuit-board"></i></div><div><span>Motherboard</span><h3>Gigabyte B850M Force</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="memory-stick"></i></div><div><span>RAM</span><h3>Patriot Viper Venom 32 GB<small>2×16 GB · 6000 MHz CL30</small></h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="hard-drive"></i></div><div><span>Storage</span><h3>Samsung 980 Pro 500 GB<small>NVMe M.2</small></h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="fan"></i></div><div><span>Cooler</span><h3>MSI MAG Coreliquid 240R V2</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="box"></i></div><div><span>Case</span><h3>MSI MAG Forge 101M</h3></div></div>
+        <div class="item"><div class="ic"><i data-lucide="zap"></i></div><div><span>Power Supply</span><h3>MSI MPG A650GF 650W<small>80+ Gold</small></h3></div></div>
+      </div>
+    </section>
+  </div>
+  </main>
 
-        function updateSlider() {
-            mapBg.src = MAPS[currentMapIndex].url;
-            mapNameLabel.textContent = `Preview on ${MAPS[currentMapIndex].name}`;
-            renderDots();
-        }
+  <footer>
+    <div class="wrap foot">
+      <div>©<span id="year">2025</span> oz3R · Made with ♡ for personal use</div>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
 
-        function renderDots() {
-            dotsContainer.innerHTML = '';
-            MAPS.forEach((_, index) => {
-                const dot = document.createElement('button');
-                dot.className = `h-2 rounded-full transition-all ${index === currentMapIndex ? 'bg-blue-500 w-4' : 'bg-white/50 w-2 hover:bg-white'}`;
-                dot.addEventListener('click', () => {
-                    currentMapIndex = index;
-                    updateSlider();
-                });
-                dotsContainer.appendChild(dot);
-            });
-        }
+  <div id="toast" role="status" aria-live="polite"><i data-lucide="check-circle-2"></i><span>Copied to clipboard</span></div>
 
-        prevBtn.addEventListener('click', () => {
-            currentMapIndex = (currentMapIndex - 1 + MAPS.length) % MAPS.length;
-            updateSlider();
-        });
+  <script>
+    // ---------- Settings used for calculations ----------
+    const DPI = 800, SENS = 1.25;
 
-        nextBtn.addEventListener('click', () => {
-            currentMapIndex = (currentMapIndex + 1) % MAPS.length;
-            updateSlider();
-        });
+    // ---------- Icons ----------
+    if (window.lucide) lucide.createIcons();
 
-        // --- Robust Copy Function ---
-        function handleCopy(text) {
-            const fallbackCopyTextToClipboard = (text) => {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-                textArea.style.opacity = "0";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback copy error', err);
-                }
-                document.body.removeChild(textArea);
-            }
+    // ---------- cm/360 ----------
+    const cm = 2.54 * 360 / (DPI * SENS * 0.022);
+    document.getElementById('cm360').textContent = cm.toFixed(1);
+    document.getElementById('in360').textContent = (cm / 2.54).toFixed(1);
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).catch((err) => {
-                    fallbackCopyTextToClipboard(text);
-                });
-            } else {
-                fallbackCopyTextToClipboard(text);
-            }
-        }
-    </script>
+    // ---------- Game switcher (#cs2, #pubg ...) ----------
+    const gameTabs = [...document.querySelectorAll('#links a[data-game]')];
+    const panels = [...document.querySelectorAll('.game[data-game]')];
+    const games = panels.map(p => p.dataset.game);
+    const HOME = 'setup';
+    const hero = document.getElementById('top');
+    // sliding indicator behind the active tab
+    const linksBox = document.getElementById('links');
+    const ind = document.createElement('span');
+    ind.className = 'ind';
+    linksBox.prepend(ind);
+    function moveInd() {
+      const a = linksBox.querySelector('a.active');
+      if (!a) { ind.style.opacity = 0; return; }
+      ind.style.opacity = 1;
+      ind.style.width = a.offsetWidth + 'px';
+      ind.style.transform = 'translateX(' + a.offsetLeft + 'px)';
+    }
+    window.addEventListener('resize', moveInd);
+    document.fonts && document.fonts.ready.then(moveInd);
+    window.addEventListener('load', moveInd);
+
+    const playEnter = el => { el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); };
+    function showGame(id) {
+      if (!games.includes(id)) id = HOME;
+      panels.forEach(p => p.hidden = p.dataset.game !== id);
+      hero.hidden = id !== HOME; // profile only on the home (Setup) page
+      gameTabs.forEach(t => t.classList.toggle('active', t.dataset.game === id));
+      linksBox.classList.toggle('bc-active', id === 'bodycam');
+      moveInd();
+      playEnter(document.getElementById('game-' + id));
+      if (id === HOME) playEnter(hero);
+      const head = document.querySelector('#game-' + id + ' .game-head h2');
+      document.title = id === HOME ? 'oz3R' : 'oz3R — ' + head.textContent + ' Settings';
+      window.scrollTo(0, 0);
+    }
+    gameTabs.forEach(t => t.addEventListener('click', e => {
+      e.preventDefault();
+      history.replaceState(null, '', t.dataset.game === HOME ? location.pathname : '#' + t.dataset.game);
+      showGame(t.dataset.game);
+    }));
+    document.querySelector('footer a[href="#top"]').addEventListener('click', e => {
+      e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    showGame(location.hash.slice(1));
+
+    // ---------- Reveal on scroll ----------
+    // stagger: give cards inside each section an index for a cascading entrance
+    document.querySelectorAll('.items, .tiles, .stats').forEach(g =>
+      [...g.children].forEach((c, i) => c.style.setProperty('--i', i)));
+
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // count numbers up from 0 when a section appears (only plain numbers like 1000, 1.25, -1)
+    function countUp(root) {
+      if (reduceMotion) return;
+      root.querySelectorAll('.stat b, .tile b, .big, .mini b').forEach(el => {
+        const node = el.firstChild;
+        if (!node || node.nodeType !== 3) return;
+        const txt = node.nodeValue.trim();
+        if (!/^-?\d+(\.\d+)?$/.test(txt)) return;
+        const end = parseFloat(txt), dec = (txt.split('.')[1] || '').length, t0 = performance.now(), dur = 1100;
+        const step = now => {
+          const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+          node.nodeValue = (end * e).toFixed(dec);
+          if (p < 1) requestAnimationFrame(step); else node.nodeValue = txt;
+        };
+        requestAnimationFrame(step);
+      });
+    }
+
+    const ro = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); countUp(e.target); ro.unobserve(e.target); }
+    }), { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+    // cursor spotlight on glass cards
+    document.addEventListener('pointermove', e => {
+      const c = e.target.closest && e.target.closest('.card, .item');
+      if (!c) return;
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    }, { passive: true });
+
+    // ---------- Crosshair map preview ----------
+    const base = 'https://prosettings.net/cdn-cgi/image/dpr=1%2Cf=auto%2Cfit=cover%2Cheight=300%2Cwidth=900%2Csharpen=1/wp-content/plugins/prosettings-customization/assets/cs2-crosshair-images/';
+    const MAPS = [
+      ['Dust 2', 'dust2'], ['Mirage', 'mirage'], ['Inferno', 'inferno'], ['Nuke', 'nuke'],
+      ['Ancient', 'ancient'], ['Anubis', 'anubis'], ['Vertigo', 'vertigo'], ['Overpass', 'overpass']
+    ].map(([name, f]) => ({ name, url: base + f + '.jpeg' }));
+    MAPS.forEach(m => { const i = new Image(); i.src = m.url; }); // preload
+
+    let mi = 0;
+    const img = document.getElementById('map-img');
+    const mapsBox = document.getElementById('maps');
+    const mapName = document.getElementById('map-name');
+    MAPS.forEach((m, i) => {
+      const b = document.createElement('button');
+      b.textContent = m.name;
+      b.addEventListener('click', () => setMap(i));
+      mapsBox.appendChild(b);
+    });
+    function setMap(i) {
+      mi = (i + MAPS.length) % MAPS.length;
+      img.classList.add('fade');
+      setTimeout(() => { img.src = MAPS[mi].url; img.alt = MAPS[mi].name; }, 180);
+      img.onload = () => img.classList.remove('fade');
+      mapName.textContent = MAPS[mi].name;
+      [...mapsBox.children].forEach((b, j) => b.classList.toggle('active', j === mi));
+    }
+    document.getElementById('prev').onclick = () => setMap(mi - 1);
+    document.getElementById('next').onclick = () => setMap(mi + 1);
+    setMap(0);
+
+    const preview = document.getElementById('preview');
+    const zoomBtn = document.getElementById('zoom-btn');
+    zoomBtn.onclick = () => {
+      const z = preview.classList.toggle('zoom');
+      zoomBtn.setAttribute('aria-pressed', z);
+      zoomBtn.querySelector('span').textContent = z ? '3× Zoom' : 'Zoom';
+    };
+
+    // swipe on touch
+    let tx = null;
+    preview.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+    preview.addEventListener('touchend', e => {
+      if (tx === null) return;
+      const dx = e.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 40) setMap(mi + (dx < 0 ? 1 : -1));
+      tx = null;
+    });
+
+    // ---------- Copy with feedback ----------
+    const toast = document.getElementById('toast');
+    let tt;
+    async function copyText(text) {
+      try { await navigator.clipboard.writeText(text); }
+      catch {
+        const ta = Object.assign(document.createElement('textarea'), { value: text });
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch {}
+        ta.remove();
+      }
+    }
+    document.querySelectorAll('[data-copy]').forEach(btn => {
+      const label = btn.innerHTML;
+      btn.addEventListener('click', async () => {
+        await copyText(document.querySelector(btn.dataset.copy).textContent.trim());
+        btn.classList.add('done'); btn.textContent = 'Copied!';
+        toast.classList.add('show');
+        clearTimeout(tt);
+        tt = setTimeout(() => { toast.classList.remove('show'); }, 1800);
+        setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = label; }, 1500);
+      });
+    });
+  </script>
 </body>
 </html>
